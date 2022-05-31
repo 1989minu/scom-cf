@@ -42,8 +42,9 @@ Resources:
                 - !Ref S3Bucket
                 - /*
             Principal:
-              AWS:
-                  
+              AWS: 
+                - !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+                               
             Condition:
               StringEquals:
                 'aws:SourceVpce': ${S3VpceId}
