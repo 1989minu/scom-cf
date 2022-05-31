@@ -7,12 +7,47 @@ Parameters:
     Description: Name for s3 bucket (Name must begin and end with a letter or number and consist only of lowercase letters, numbers, and hyphens (-).)
     AllowedPattern: (?=^.{3,63}$)^[a-z0-9][a-z0-9-]*[a-z0-9]
     ConstraintDescription: Name must begin and end with a letter or number and consist only of lowercase letters, numbers, and hyphens (-).
-
+  
+  S3VpceId:
+    Type: String
+    Description: ID of VPC endpoint to restrict access to the Bucket only from the end point
+    
 Resources:
   S3Bucket:
     Type: AWS::S3::Bucket
     Properties: 
-      BucketName: !Sub ${BucketName}-s3
+      BucketName: !Sub ${BucketName}-s3 
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LoggingConfiguration:
+        DestinationBucketName: my-central-loggingBucket
+        LogFilePrefix: testing-logs       
+  
+
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Action:
+              - 's3:GetObject'
+            Effect: Allow
+            Resource: !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref S3Bucket
+                - /*
+            Principal:
+              AWS:
+                  
+            Condition:
+              StringEquals:
+                'aws:SourceVpce': ${S3VpceId}
+
 
 Outputs:
   BucketARN:
